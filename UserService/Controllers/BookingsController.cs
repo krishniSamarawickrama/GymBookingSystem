@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserService.Data;
@@ -32,7 +31,10 @@ namespace UserService.Controllers
 
             if (booking == null)
             {
-                return NotFound(new { message = "Booking not found." });
+                return NotFound(new
+                {
+                    message = "Booking not found."
+                });
             }
 
             return booking;
@@ -50,6 +52,62 @@ namespace UserService.Controllers
                 new { id = booking.Id },
                 booking
             );
+        }
+
+        // PUT: api/Bookings/1
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBooking(
+            int id,
+            Booking booking)
+        {
+            if (id != booking.Id)
+            {
+                return BadRequest(new
+                {
+                    message = "Booking ID mismatch."
+                });
+            }
+
+            var existingBooking = await _context.Bookings.FindAsync(id);
+
+            if (existingBooking == null)
+            {
+                return NotFound(new
+                {
+                    message = "Booking not found."
+                });
+            }
+
+            existingBooking.UserId = booking.UserId;
+            existingBooking.GymClassId = booking.GymClassId;
+            existingBooking.BookingDate = booking.BookingDate;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(existingBooking);
+        }
+
+        // DELETE: api/Bookings/1
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteBooking(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+
+            if (booking == null)
+            {
+                return NotFound(new
+                {
+                    message = "Booking not found."
+                });
+            }
+
+            _context.Bookings.Remove(booking);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Booking deleted successfully."
+            });
         }
     }
 }
